@@ -137,30 +137,25 @@
     //   delay(1000);
     // }
     
-    int currHour = 8;
-    int currMin = 30;
-    int strHour = 2;
-    int strMin = 30;
+
     // int currHour = timeInfo.tm_hour;
     // int currMin = timeInfo.tm_min;
+    int currHour = 8;
+    int currMin = 30;
     
+    int strHour = 0;
+    int strMin = -30;
+
     Serial.print(currHour);
     Serial.println(currMin);
     Serial.print("=>");
     Serial.print(strHour);
     Serial.print(strMin);
     Serial.println("END");
-    if (currMin >= 0 && currMin < 15) {
-      currMin = 0;
-    } else if (currMin >= 15 && currMin < 30) {
-      currMin = 15;
-    } else if (currMin >= 30 && currMin < 45) {
-      currMin = 30;
-    } else if (currMin >= 45 && currMin < 60) {
-      currMin = 45;
-    }
+    currMin =  extraFixTime(currMin);
 
-    int storedTimeInMinutes = strHour * 60 + strMin; 
+
+    int storedTimeInMinutes = strHour * 60 + strMin; // 240
 
     if (currHour >= 8 && currHour <= 12) {
       if(currHour == 12 && currMin >= 0){
@@ -168,11 +163,11 @@
       }
       int currentTimeInMinutes = currHour * 60 + currMin;
       int _8inMinutes = 8 * 60;                                                                                                        
-      int differenceInMinutes = abs(currentTimeInMinutes - _8inMinutes) - storedTimeInMinutes;  
+      int differenceInMinutes = abs(currentTimeInMinutes - _8inMinutes) - storedTimeInMinutes;// 510 - 480*= 30 - 
       int intervalsOf15 = (differenceInMinutes / 15);                                           
       int day_diff = intervalsOf15 < 0 ? 20 - (abs((intervalsOf15)) % 20) : (abs((intervalsOf15)) % 20);
       float rotateDeg = (18.0 * day_diff);
-      Serial.print("DAY DIFF 8 // ");
+      Serial.print("Sectors for [8] are -> ");
       Serial.println(day_diff);
       TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,8);
       // Serial.print(diff.hours);
@@ -342,7 +337,7 @@
 
   TimeDifference IdelTimeDifference(int currMin) {
     TimeDifference diff;
-    diff.minutes = currMin;
+    diff.minutes = -currMin;// put - sign check if it is fine ?
     diff.hours = 0;
     if (diff.minutes < 0) {
       diff.minutes += 60;
@@ -373,3 +368,16 @@
       }
       return adjustedTotalMinutes / 15;
   }
+
+int extraFixTime(int currMin){
+        if (currMin >= 0 && currMin < 15) {
+      currMin = 0;
+    } else if (currMin >= 15 && currMin < 30) {
+      currMin = 15;
+    } else if (currMin >= 30 && currMin < 45) {
+      currMin = 30;
+    } else if (currMin >= 45 && currMin < 60) {
+      currMin = 45;
+    }
+    return currMin;
+}
