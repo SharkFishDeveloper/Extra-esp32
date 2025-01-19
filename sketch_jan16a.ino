@@ -27,25 +27,25 @@
 
   void setup() {
     Serial.begin(9600);
-    WiFi.begin("GNXS-9A22A1", "Dangerwifi");
-    int wifiCounter = 0;
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(10000);
-      Serial.print(".");
-      wifiCounter++;
-      if (wifiCounter > 20) {
-        Serial.println("Failed to connect to WiFi.");
-        return;
-      }
-    }
-    configTime(19800, 0, "pool.ntp.org");
-    Serial.println("Waiting for NTP time...");
-    struct tm timeInfo;
-    while (!getLocalTime(&timeInfo)) {
-      Serial.print(".");
-      delay(1000);
-    }
-
+    // WiFi.begin("GNXS-9A22A1", "Dangerwifi");
+    // int wifiCounter = 0;
+    // while (WiFi.status() != WL_CONNECTED) {
+    //   delay(10000);
+    //   Serial.print(".");
+    //   wifiCounter++;
+    //   if (wifiCounter > 20) {
+    //     Serial.println("Failed to connect to WiFi.");
+    //     return;
+    //   }
+    // }
+    // configTime(19800, 0, "pool.ntp.org");
+    // Serial.println("Waiting for NTP time...");
+    // struct tm timeInfo;
+    // while (!getLocalTime(&timeInfo)) {
+    //   Serial.print(".");
+    //   delay(1000);
+    // }
+//-----------------------------------------------------------------------------------
     //  int storedDay = EEPROM.read(0);
     //  if (storedDay >= 0 && storedDay <= 6) {
     //   Serial.print("Day already stored in EEPROM: ");
@@ -70,26 +70,26 @@
     pinMode(IN7_1, OUTPUT);
     pinMode(IN8_1, OUTPUT);
 
-    // timeFn(7,15);
-
-
     // EEPROM.begin(512);
-    // EEPROM.write(1, (1) & 0xFF); 
-    //         int n = 0;
+    // EEPROM.write(1, (4) & 0xFF); 
+    //         int n = 00;
     // int minute = n < 0 ? 256 + n : n; 
     // EEPROM.write(2, (minute / 256) & 0xFF);  // Store the high byte of minutes in EEPROM at address 2
     // EEPROM.write(3, minute & 0xFF);
     // EEPROM.commit();
-
+      
+//---------------------------------------------------------------------------------
     // int storedTime = EEPROM.read(1);
-    // int storedMin = EEPROM.read(2);
     // if(storedTime < -1 || storedTime > 4){
-    // int positiveEquivalent = storedMin < 0 ? 256 + storedMin : storedMin;
     // EEPROM.begin(512);
-    // EEPROM.write(1, (0) & 0xFF); 
-    // EEPROM.write(2, positiveEquivalent && 0xFF);
+    // EEPROM.write(1, (4) & 0xFF);
+    // int n = 00;
+    // int minute = n < 0 ? 256 + n : n; 
+    // EEPROM.write(2, (minute / 256) & 0xFF);  // Store the high byte of minutes in EEPROM at address 2
+    // EEPROM.write(3, minute & 0xFF);
     // EEPROM.commit();
     // }
+    timeFn();
   }
 
   void loop() {  //-> loop
@@ -114,8 +114,8 @@
     //   // }
     //   lastMillis = millis();
     // }
-    timeFn();
-    delay(15000);
+    // timeFn();
+    // delay(15000);
   }
 
 
@@ -143,15 +143,16 @@
     int currHour = 8;
     int currMin = 30;
     
-    int strHour = 0;
-    int strMin = -30;
+    int strHour = 1;
+    int strMin = 00;
 
     Serial.print(currHour);
-    Serial.println(currMin);
+    Serial.print(":");
+    Serial.print(currMin);
     Serial.print("=>");
     Serial.print(strHour);
+    Serial.print(":");
     Serial.print(strMin);
-    Serial.println("END");
     currMin =  extraFixTime(currMin);
 
 
@@ -167,12 +168,13 @@
       int intervalsOf15 = (differenceInMinutes / 15);                                           
       int day_diff = intervalsOf15 < 0 ? 20 - (abs((intervalsOf15)) % 20) : (abs((intervalsOf15)) % 20);
       float rotateDeg = (18.0 * day_diff);
-      Serial.print("Sectors for [8] are -> ");
+      Serial.print(" Sectors for [8] are -> ");
       Serial.println(day_diff);
       TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,8);
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.println(diff. minutes);
+      Serial.print(diff.hours);
+      Serial.print(":");
+      Serial.print(diff. minutes);
+      Serial.println("-----------");
       rotate2(rotateDeg,diff);
           // Serial.println("====");
     } 
