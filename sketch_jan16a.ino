@@ -1,6 +1,8 @@
   #include <WiFi.h>
   #include "time.h"
   #include <EEPROM.h>
+  // #include <ESP32Servo.h>
+
   struct TimeDifference {
     int hours;
     int minutes;
@@ -25,26 +27,30 @@
   static int storedDay = 1;
   static int todaysDay = 1;
 
+
+  // Servo myServo;
+
   void setup() {
     Serial.begin(9600);
-    // WiFi.begin("GNXS-9A22A1", "Dangerwifi");
-    // int wifiCounter = 0;
-    // while (WiFi.status() != WL_CONNECTED) {
-    //   delay(10000);
-    //   Serial.print(".");
-    //   wifiCounter++;
-    //   if (wifiCounter > 20) {
-    //     Serial.println("Failed to connect to WiFi.");
-    //     return;
-    //   }
-    // }
-    // configTime(19800, 0, "pool.ntp.org");
-    // Serial.println("Waiting for NTP time...");
-    // struct tm timeInfo;
-    // while (!getLocalTime(&timeInfo)) {
-    //   Serial.print(".");
-    //   delay(1000);
-    // }
+ 
+    WiFi.begin("GNXS-9A22A1", "Dangerwifi");
+    int wifiCounter = 0;
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(10000);
+      Serial.print(".");
+      wifiCounter++;
+      if (wifiCounter > 20) {
+        Serial.println("Failed to connect to WiFi.");
+        return;
+      }
+    }
+    configTime(19800, 0, "pool.ntp.org");
+    Serial.println("Waiting for NTP time...");
+    struct tm timeInfo;
+    while (!getLocalTime(&timeInfo)) {
+      Serial.print(".");
+      delay(1000);
+    }
 //-----------------------------------------------------------------------------------
     //  int storedDay = EEPROM.read(0);
     //  if (storedDay >= 0 && storedDay <= 6) {
@@ -79,19 +85,18 @@
     // EEPROM.commit();
       
 //---------------------------------------------------------------------------------
-    // int storedTime = EEPROM.read(1);
-    // if(storedTime < -1 || storedTime > 4){
+    int storedTime = EEPROM.read(1);
+    if(storedTime < -1 || storedTime > 4){
       EEPROM.begin(512);
       EEPROM.write(1,  (0) & 0xFF);
-              int n = -45;
+      int n = 00;
       int minute = 60 + n ; 
       EEPROM.write(2, (minute) & 0xFF);
       EEPROM.commit();
-    // }
-    // timeFn();
+    }
   }
 
-  void loop() {  //-> loop
+  void loop() {  
     static unsigned long lastMillis = millis();
     static struct tm timeInfo;
     // if (millis() - lastMillis >= 10000) {
@@ -113,9 +118,7 @@
     //   // }
     //   lastMillis = millis();
     // }
-
- 
-    delay(7000);
+    delay(120000);
     timeFn();
   }
 
@@ -126,19 +129,17 @@
     int strHour = timeFromEEPROM;
     int storedHighByte = EEPROM.read(2); // mins
     int strMin = storedHighByte - 60;  
+    struct tm timeInfo;
+    configTime(19800, 0, "pool.ntp.org");
+    while (!getLocalTime(&timeInfo)) {
+      Serial.print(".");
+      delay(1000);
+    }
+    int currHour = timeInfo.tm_hour;
+    int currMin = timeInfo.tm_min;
 
-    // struct tm timeInfo;
-    // configTime(19800, 0, "pool.ntp.org");
-    // while (!getLocalTime(&timeInfo)) {
-    //   Serial.print(".");
-    //   delay(1000);
-    // }
-    
-
-    // int currHour = timeInfo.tm_hour;
-    // int currMin = timeInfo.tm_min;
-    int currHour = 24;
-    int currMin  = 45;
+    // int currHour = 24;
+    // int currMin  = 45;
     
     // int strHour = 1;
     // int strMin = 00;
@@ -169,17 +170,12 @@
       Serial.print(" Rotate by-> ");Serial.print(day_diff);
       Serial.println("-----------");
       TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,8);
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.print(diff. minutes);
       rotate2(rotateDeg,diff);
     } 
     else if (currHour >= 14 && currHour <= 18) {
       if(currHour == 18 && currMin >= 0){
         currMin = 0;
       }
-      //int storedTimeInMinutes = strHour * 60 + strMin;                         -45
-      // 17 : 45
       int currentTimeInMinutes = currHour * 60 + currMin; 
       int _2inMinutes = 14 * 60;
       int differenceInMinutes = abs(currentTimeInMinutes - _2inMinutes) - storedTimeInMinutes;  
@@ -189,11 +185,7 @@
       Serial.print("DAY DIFF 12 // ");
       Serial.println(day_diff);    
       TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,14);
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.println(diff. minutes);
       rotate2(rotateDeg,diff);
-          // Serial.println("====");
     } 
     else if (currHour >= 20 && currHour <= 24) {
         if(currHour == 24 && currMin >= 0){
@@ -208,31 +200,23 @@
       Serial.print("DAY DIFF 20 // ");
       Serial.println(day_diff);   
       TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,20);
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.println(diff. minutes);
       rotate2(rotateDeg,diff);
-          // Serial.println("====");
     }
 
     // Time is out of boundary
     else if(currHour >= 13 && currHour < 14){
       // 13:45
       int remTime = currMin/15; // 45/15 = 3
-      int quarter15 = calculate15MinuteIntervals(strHour,strMin);// 0:45 --> 19
+      int quarter15 = calculate15MinuteIntervals(strHour,strMin);
       int total = (remTime +  quarter15);
-      total = total >= 20 ? total % 20 : total; // 5 ?
+      total = total >= 20 ? total % 20 : total;
       Serial.print("Rotate by ->");
       Serial.print(total);
       Serial.println("------------");
 
       float rotateDeg = (18.0 * total);
       TimeDifference diff = IdelTimeDifference(currMin); // 13:30
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.println(diff. minutes);
       rotate2(rotateDeg,diff);
-          // Serial.println("====");
     }
     else if(currHour >= 19 && currHour < 20){
       int remTime = currMin/15; // 3
@@ -242,11 +226,7 @@
       Serial.println(total);
       float rotateDeg = (18.0 * total);
       TimeDifference diff = IdelTimeDifference(currMin);
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.println(diff. minutes);
       rotate2(rotateDeg,diff);
-          // Serial.println("====");
     }
     else if(currHour >= 7 && currHour < 8){
       int remTime = currMin/15; //3
@@ -256,11 +236,6 @@
       Serial.println(total);
       float rotateDeg = (18.0 * total);
       TimeDifference diff = IdelTimeDifference(currMin);
-      // Serial.print(diff.hours);
-      // Serial.print(":");
-      // Serial.println(diff. minutes);
-      // rotate2(rotateDeg,diff);
-          // Serial.println("====");
     }
   }
 
@@ -309,6 +284,10 @@
         delay(10);
       }
     }
+    pinMode(IN5_1, OUTPUT);
+    pinMode(IN6_1, OUTPUT);
+    pinMode(IN7_1, OUTPUT);
+    pinMode(IN8_1, OUTPUT);
   }
 
 
@@ -369,6 +348,7 @@ int extraFixTime(int currMin){
     return currMin;
 }
 
+// ----------------------------------------------------------------------------------
 void checkEprom(){
      EEPROM.begin(512);
     EEPROM.write(1, (3) & 0xFF);
@@ -383,3 +363,6 @@ void checkEprom(){
     Serial.print(" Min ");
     Serial.println(min);
 }
+
+
+
