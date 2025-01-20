@@ -82,8 +82,8 @@
     // int storedTime = EEPROM.read(1);
     // if(storedTime < -1 || storedTime > 4){
       EEPROM.begin(512);
-      EEPROM.write(1, (0) & 0xFF);
-              int n = -45;
+      EEPROM.write(1,  (0) & 0xFF);
+              int n = 00;
       int minute = 60 + n ; 
       EEPROM.write(2, (minute) & 0xFF);
       EEPROM.commit();
@@ -138,7 +138,7 @@
     // int currHour = timeInfo.tm_hour;
     // int currMin = timeInfo.tm_min;
     int currHour = 13;
-    int currMin = 56;
+    int currMin = 45;
     
     // int strHour = 1;
     // int strMin = 00;
@@ -215,14 +215,17 @@
 
     // Time is out of boundary
     else if(currHour >= 13 && currHour < 14){
-      int remTime = currMin/15; // 30/15 = 2
-      int quarter15 = calculate15MinuteIntervals(strHour,strMin);// 0:-45
+      // 13:45
+      int remTime = currMin/15; // 45/15 = 3
+      int quarter15 = calculate15MinuteIntervals(strHour,strMin);// 0:45 --> 19
       int total = (remTime +  quarter15);
-      total = total >= 20 ? total % 20 : total;
-      Serial.println(total);
+      total = total >= 20 ? total % 20 : total; // 5 ?
+      Serial.print("Rotate by ->");
+      Serial.print(total);
+      Serial.println("------------");
 
       float rotateDeg = (18.0 * total);
-      TimeDifference diff = IdelTimeDifference(currMin);
+      TimeDifference diff = IdelTimeDifference(currMin); // 13:30
       // Serial.print(diff.hours);
       // Serial.print(":");
       // Serial.println(diff. minutes);
@@ -330,40 +333,48 @@
 
   TimeDifference IdelTimeDifference(int currMin) {
     TimeDifference diff;
-    diff.minutes = currMin;
+    diff.minutes = -currMin;
     diff.hours = 0;
-    if (diff.minutes < 0) {
-      diff.minutes += 60;
-      diff.hours -= 1;
-    }
-    if (diff.hours < 0) {
-      diff.hours += 24;  
-    }
     int min = diff.minutes + 60;
     EEPROM.begin(512);
-    EEPROM.write(1, (diff.hours) & 0xFF); 
+    EEPROM.write(1, (0) & 0xFF); 
     EEPROM.write(2, (min) & 0xFF); 
     EEPROM.commit();
     return diff;
   }
 
 
-  int calculate15MinuteIntervals(int currHour, int currMin) {
-    // 13:56
-      int timeH = currHour % 12;
-      int adjustedHour = 4 - timeH;
-      if (adjustedHour < 0) {
-          adjustedHour += 12;
-      }
-      int adjustedTotalMinutes = adjustedHour * 60 - (-60 - currMin);
-      if (adjustedTotalMinutes < 0) {
-          adjustedTotalMinutes += 12 * 60; 
-      }
-      return adjustedTotalMinutes / 15;
-  }
+  // int calculate15MinuteIntervals(int strHour, int strMin) {
+  //   // 13:30
+  //     int timeH = strHour % 12;//1
+  //     int adjustedHour = 4 - timeH;//3
+  //     if (adjustedHour < 0) {
+  //         adjustedHour += 12;
+  //     }
+  //     int adjustedTotalMinutes = adjustedHour * 60 - (-60-(-strMin));
+  //     if (adjustedTotalMinutes < 0) {
+  //         adjustedTotalMinutes += 12 * 60; 
+  //     }
+  //     return adjustedTotalMinutes / 15;
+  // }
+
+  int calculate15MinuteIntervals(int strHour, int strMin) {
+    if(strMin == -15){
+      strMin = -45;
+    }else if(strMin==-45){
+      strMin = -15;
+    }
+    int adjustedHour = 4 - strHour;
+    int adjustedTotalMinutes = adjustedHour * 60 - strMin;
+
+    if (adjustedTotalMinutes < 0) {
+        adjustedTotalMinutes += 12 * 60;  
+    }
+    return adjustedTotalMinutes / 15;
+}
 
 int extraFixTime(int currMin){
-        if (currMin >= 0 && currMin < 15) {
+    if (currMin >= 0 && currMin < 15) {
       currMin = 0;
     } else if (currMin >= 15 && currMin < 30) {
       currMin = 15;
