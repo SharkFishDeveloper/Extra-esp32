@@ -81,15 +81,14 @@
 //---------------------------------------------------------------------------------
     // int storedTime = EEPROM.read(1);
     // if(storedTime < -1 || storedTime > 4){
-    // EEPROM.begin(512);
-    // EEPROM.write(1, (4) & 0xFF);
-    // int n = 00;
-    // int minute = n < 0 ? 256 + n : n; 
-    // EEPROM.write(2, (minute / 256) & 0xFF);  // Store the high byte of minutes in EEPROM at address 2
-    // EEPROM.write(3, minute & 0xFF);
-    // EEPROM.commit();
+      EEPROM.begin(512);
+      EEPROM.write(1, (0) & 0xFF);
+              int n = -45;
+      int minute = 60 + n ; 
+      EEPROM.write(2, (minute) & 0xFF);
+      EEPROM.commit();
     // }
-    timeFn();
+    // timeFn();
   }
 
   void loop() {  //-> loop
@@ -114,21 +113,19 @@
     //   // }
     //   lastMillis = millis();
     // }
-    // timeFn();
-    // delay(15000);
+
+ 
+    delay(7000);
+    timeFn();
   }
 
 
 
   void timeFn() {
-    // int timeFromEEPROM = EEPROM.read(1);
-    // int storedHighByte = EEPROM.read(2);  
-    // int storedLowByte = EEPROM.read(3);
-    // int strMin = storedHighByte * 256 + storedLowByte;  
-    // if (strMin > 127) {
-    //   strMin -= 256;
-    // }
-    // int strHour = timeFromEEPROM;
+    int timeFromEEPROM = EEPROM.read(1); // hrs
+    int strHour = timeFromEEPROM;
+    int storedHighByte = EEPROM.read(2); // mins
+    int strMin = storedHighByte - 60;  
 
     // struct tm timeInfo;
     // configTime(19800, 0, "pool.ntp.org");
@@ -140,19 +137,20 @@
 
     // int currHour = timeInfo.tm_hour;
     // int currMin = timeInfo.tm_min;
-    int currHour = 8;
-    int currMin = 30;
+    int currHour = 13;
+    int currMin = 56;
     
-    int strHour = 1;
-    int strMin = 00;
+    // int strHour = 1;
+    // int strMin = 00;
 
-    Serial.print(currHour);
-    Serial.print(":");
-    Serial.print(currMin);
-    Serial.print("=>");
+    // Serial.print(currHour);
+    // Serial.print(":");
+    // Serial.print(currMin);
+    // Serial.print("=>");
+    Serial.print("Stored time ==>");
     Serial.print(strHour);
     Serial.print(":");
-    Serial.print(strMin);
+    Serial.println(strMin);
     currMin =  extraFixTime(currMin);
 
 
@@ -168,15 +166,13 @@
       int intervalsOf15 = (differenceInMinutes / 15);                                           
       int day_diff = intervalsOf15 < 0 ? 20 - (abs((intervalsOf15)) % 20) : (abs((intervalsOf15)) % 20);
       float rotateDeg = (18.0 * day_diff);
-      Serial.print(" Sectors for [8] are -> ");
-      Serial.println(day_diff);
-      TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,8);
-      Serial.print(diff.hours);
-      Serial.print(":");
-      Serial.print(diff. minutes);
+      Serial.print(" Rotate by-> ");Serial.print(day_diff);
       Serial.println("-----------");
+      TimeDifference diff = calculateTimeDifference(currHour, currMin, strHour, strMin,8);
+      // Serial.print(diff.hours);
+      // Serial.print(":");
+      // Serial.print(diff. minutes);
       rotate2(rotateDeg,diff);
-          // Serial.println("====");
     } 
     else if (currHour >= 14 && currHour <= 18) {
       if(currHour == 18 && currMin >= 0){
@@ -222,7 +218,7 @@
       int remTime = currMin/15; // 30/15 = 2
       int quarter15 = calculate15MinuteIntervals(strHour,strMin);// 0:-45
       int total = (remTime +  quarter15);
-      total = total > 20 ? total % 20 : total;
+      total = total >= 20 ? total % 20 : total;
       Serial.println(total);
 
       float rotateDeg = (18.0 * total);
@@ -308,10 +304,6 @@
         delay(10);
       }
     }
-    Serial.print("Diff.hours->");
-    Serial.print(diff.hours);
-    Serial.print("Diff.Min->");
-    Serial.print(diff.minutes);
   }
 
 
@@ -328,18 +320,17 @@
   if (diff.hours < 0) {
     diff.hours += 24;
   }
-    int min = diff.minutes < 0 ? 256 + diff.minutes : diff.minutes;
+    int min = diff.minutes + 60;
     EEPROM.begin(512);
     EEPROM.write(1, (diff.hours) & 0xFF); 
-    EEPROM.write(2, (min / 256) & 0xFF);  // Store the high byte (will be 0 for values < 256)
-    EEPROM.write(3, min & 0xFF); 
+    EEPROM.write(2, (min) & 0xFF); 
     EEPROM.commit();
   return diff;
   }
 
   TimeDifference IdelTimeDifference(int currMin) {
     TimeDifference diff;
-    diff.minutes = -currMin;// put - sign check if it is fine ?
+    diff.minutes = currMin;
     diff.hours = 0;
     if (diff.minutes < 0) {
       diff.minutes += 60;
@@ -348,17 +339,17 @@
     if (diff.hours < 0) {
       diff.hours += 24;  
     }
-    int min = diff.minutes < 0 ? 256 + diff.minutes : diff.minutes;
+    int min = diff.minutes + 60;
     EEPROM.begin(512);
     EEPROM.write(1, (diff.hours) & 0xFF); 
-    EEPROM.write(2, (min / 256) & 0xFF);  // Store the high byte (will be 0 for values < 256)
-    EEPROM.write(3, min & 0xFF); 
+    EEPROM.write(2, (min) & 0xFF); 
     EEPROM.commit();
     return diff;
   }
 
 
   int calculate15MinuteIntervals(int currHour, int currMin) {
+    // 13:56
       int timeH = currHour % 12;
       int adjustedHour = 4 - timeH;
       if (adjustedHour < 0) {
@@ -382,4 +373,19 @@ int extraFixTime(int currMin){
       currMin = 45;
     }
     return currMin;
+}
+
+void checkEprom(){
+     EEPROM.begin(512);
+    EEPROM.write(1, (3) & 0xFF);
+    int n = -45;
+    int minute = 60 + n ; 
+    EEPROM.write(2, (minute) & 0xFF);
+    EEPROM.commit();
+    int hour = EEPROM.read(1);
+    int min = EEPROM.read(2)-60;
+    Serial.print("HOUR-> ");
+    Serial.print(hour);
+    Serial.print(" Min ");
+    Serial.println(min);
 }
