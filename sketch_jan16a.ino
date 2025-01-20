@@ -83,7 +83,7 @@
     // if(storedTime < -1 || storedTime > 4){
       EEPROM.begin(512);
       EEPROM.write(1,  (0) & 0xFF);
-              int n = 00;
+              int n = -45;
       int minute = 60 + n ; 
       EEPROM.write(2, (minute) & 0xFF);
       EEPROM.commit();
@@ -137,8 +137,8 @@
 
     // int currHour = timeInfo.tm_hour;
     // int currMin = timeInfo.tm_min;
-    int currHour = 13;
-    int currMin = 45;
+    int currHour = 24;
+    int currMin  = 45;
     
     // int strHour = 1;
     // int strMin = 00;
@@ -153,7 +153,7 @@
     Serial.println(strMin);
     currMin =  extraFixTime(currMin);
 
-
+    strMin = (strMin == -15) ? -45 : (strMin == -45 ? -15 : strMin);
     int storedTimeInMinutes = strHour * 60 + strMin; // 240
 
     if (currHour >= 8 && currHour <= 12) {
@@ -178,6 +178,8 @@
       if(currHour == 18 && currMin >= 0){
         currMin = 0;
       }
+      //int storedTimeInMinutes = strHour * 60 + strMin;                         -45
+      // 17 : 45
       int currentTimeInMinutes = currHour * 60 + currMin; 
       int _2inMinutes = 14 * 60;
       int differenceInMinutes = abs(currentTimeInMinutes - _2inMinutes) - storedTimeInMinutes;  
@@ -233,11 +235,11 @@
           // Serial.println("====");
     }
     else if(currHour >= 19 && currHour < 20){
-      int remTime = currMin/15; //3
-      int quarter15 = calculate15MinuteIntervals(strHour,strMin);// 2
+      int remTime = currMin/15; // 3
+      int quarter15 = calculate15MinuteIntervals(strHour,strMin) ;// 2
       int total = (remTime +  quarter15);
+      total = total >= 20 ? total % 20 : total;
       Serial.println(total);
-       total = total > 20 ? total % 20 : total;
       float rotateDeg = (18.0 * total);
       TimeDifference diff = IdelTimeDifference(currMin);
       // Serial.print(diff.hours);
@@ -250,14 +252,14 @@
       int remTime = currMin/15; //3
       int quarter15 = calculate15MinuteIntervals(strHour,strMin);// 2
       int total = (remTime +  quarter15);
-       total = total > 20 ? total % 20 : total;
+       total = total >= 20 ? total % 20 : total;
       Serial.println(total);
       float rotateDeg = (18.0 * total);
       TimeDifference diff = IdelTimeDifference(currMin);
       // Serial.print(diff.hours);
       // Serial.print(":");
       // Serial.println(diff. minutes);
-      rotate2(rotateDeg,diff);
+      // rotate2(rotateDeg,diff);
           // Serial.println("====");
     }
   }
@@ -344,26 +346,7 @@
   }
 
 
-  // int calculate15MinuteIntervals(int strHour, int strMin) {
-  //   // 13:30
-  //     int timeH = strHour % 12;//1
-  //     int adjustedHour = 4 - timeH;//3
-  //     if (adjustedHour < 0) {
-  //         adjustedHour += 12;
-  //     }
-  //     int adjustedTotalMinutes = adjustedHour * 60 - (-60-(-strMin));
-  //     if (adjustedTotalMinutes < 0) {
-  //         adjustedTotalMinutes += 12 * 60; 
-  //     }
-  //     return adjustedTotalMinutes / 15;
-  // }
-
   int calculate15MinuteIntervals(int strHour, int strMin) {
-    if(strMin == -15){
-      strMin = -45;
-    }else if(strMin==-45){
-      strMin = -15;
-    }
     int adjustedHour = 4 - strHour;
     int adjustedTotalMinutes = adjustedHour * 60 - strMin;
 
@@ -371,7 +354,7 @@
         adjustedTotalMinutes += 12 * 60;  
     }
     return adjustedTotalMinutes / 15;
-}
+  }
 
 int extraFixTime(int currMin){
     if (currMin >= 0 && currMin < 15) {
