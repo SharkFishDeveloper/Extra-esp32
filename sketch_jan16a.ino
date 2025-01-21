@@ -92,8 +92,8 @@
     int storedTime = EEPROM.read(1);
     if(storedTime < -1 || storedTime > 4){
       EEPROM.begin(512);
-      EEPROM.write(1,  (1) & 0xFF);
-              int n = 45;
+      EEPROM.write(1,  (0) & 0xFF);
+              int n = -45;
       int minute = 60 + n ; 
       EEPROM.write(2, (minute) & 0xFF);
       EEPROM.commit();
@@ -104,7 +104,7 @@
   void loop() {  
     static unsigned long lastMillis = millis();
     static struct tm timeInfo;
-    if (millis() - lastMillis >= 300000) {
+    if (millis() - lastMillis >= 900000) {
       if (getLocalTime(&timeInfo)) {
         int storedDay = EEPROM.read(0); // Read the stored day(actual) ->3
         // int todaysDay = 1;//->6
@@ -122,8 +122,11 @@
       }
       lastMillis = millis();
     }
-    delay(180000);
+    delay(300000);
     timeFn();
+
+    // -----------------
+    // delay(5000);
   }
 
 
@@ -142,8 +145,8 @@
     int currHour = timeInfo.tm_hour;
     int currMin = timeInfo.tm_min;
 
-    // int currHour = 19;
-    // int currMin  = 16;
+    // int currHour = 20;
+    // int currMin  = 55;
     
     // int strHour = 1;
     // int strMin = 00;
@@ -430,3 +433,4 @@ void rotate1Motor(float angle, int delayMs) {
     pinMode(IN3_1, INPUT);
     pinMode(IN4_1, INPUT);
 }
+
