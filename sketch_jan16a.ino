@@ -52,20 +52,22 @@
       delay(1000);
     }
 //-----------------------------------------------------------------------------------
+     rotate1Motor(350,10);
     //  int storedDay = EEPROM.read(0);
     //  if (storedDay >= 0 && storedDay <= 6) {
     //   Serial.print("Day already stored in EEPROM: ");
     //   Serial.println(daysOfWeek[storedDay]);  // Print the stored day name
     //  } else {
     //   int today = timeInfo.tm_wday;  // Get the current day from NTP (0 = Sunday, 6 = Saturday)
+    //   EEPROM.begin(512);
     //   EEPROM.write(0, today);  // Store the new day
     //   EEPROM.commit();         // Commit the changes
     //   Serial.print("Stored new day in EEPROM: ");
     //   Serial.println(daysOfWeek[today]);  // Print the current day name
     // }
-    // EEPROM.begin(512);
-    // EEPROM.write(0, today);
-    // EEPROM.commit();
+    EEPROM.begin(512);
+    EEPROM.write(0, 1);
+    EEPROM.commit();
 
     // pinMode(IN1_1, OUTPUT);
     // pinMode(IN2_1, OUTPUT);
@@ -85,39 +87,39 @@
       // rotateMotor(350,10);
       // timeFn();
 //---------------------------------------------------------------------------------
-    // int storedTime = EEPROM.read(1);
-    // if(storedTime < -1 || storedTime > 4){
-    //   EEPROM.begin(512);
-    //   EEPROM.write(1,  (0) & 0xFF);
-    //           int n = -30;
-    //   int minute = 60 + n ; 
-    //   EEPROM.write(2, (minute) & 0xFF);
-    //   EEPROM.commit();
-    // }
+    int storedTime = EEPROM.read(1);
+    if(storedTime < -1 || storedTime > 4){
+      EEPROM.begin(512);
+      EEPROM.write(1,  (0) & 0xFF);
+              int n = -30;
+      int minute = 60 + n ; 
+      EEPROM.write(2, (minute) & 0xFF);
+      EEPROM.commit();
+    }
   }
 
   void loop() {  
     static unsigned long lastMillis = millis();
     static struct tm timeInfo;
-    // if (millis() - lastMillis >= 10000) {
-    //   // if (getLocalTime(&timeInfo)) {
-    //     // int storedDay = EEPROM.read(0); // Read the stored day(actual) ->3
-    //     // int todaysDay = 1;//->6
-    //     // static int todaysDay = 4;
-    //     // todaysDay = (todaysDay + 1) % 7;
-    //     // int todaysDay = timeInfo.tm_wday;
-    //     int day_diff = (todaysDay - storedDay + 7) % 7;
-    //     float rotateDeg = ((360.0 / 7.0) * day_diff);
-    //     Serial.print("Stored->");
-    //     Serial.println(daysOfWeek[storedDay]);
-    //     Serial.print("Today->");
-    //     Serial.println(daysOfWeek[todaysDay]);
-    //     // Serial.print("rotate by ->");
-    //     // Serial.println(rotateDeg);
-    //     rotate(rotateDeg,todaysDay);
-    //   // }
-    //   lastMillis = millis();
-    // }
+    if (millis() - lastMillis >= 10000) {
+      // if (getLocalTime(&timeInfo)) {
+        // int storedDay = EEPROM.read(0); // Read the stored day(actual) ->3
+        // int todaysDay = 1;//->6
+        // static int todaysDay = 4;
+        // todaysDay = (todaysDay + 1) % 7;
+        // int todaysDay = timeInfo.tm_wday;
+        int day_diff = (todaysDay - storedDay + 7) % 7;
+        float rotateDeg = ((360.0 / 7.0) * day_diff);
+        Serial.print("Stored->");
+        Serial.println(daysOfWeek[storedDay]);
+        Serial.print("Today->");
+        Serial.println(daysOfWeek[todaysDay]);
+        // Serial.print("rotate by ->");
+        // Serial.println(rotateDeg);
+        rotate(rotateDeg,todaysDay);
+      // }
+      lastMillis = millis();
+    }
     delay(60000);
     timeFn();
   }
@@ -250,6 +252,10 @@
 
 
   void rotate(float rotateDeg, int today) { 
+    pinMode(IN1_1, OUTPUT);
+    pinMode(IN2_1, OUTPUT);
+    pinMode(IN3_1, OUTPUT);
+    pinMode(IN4_1, OUTPUT);
     int stepsToRotate = round((rotateDeg / 0.17578) / 4);
     stepsToRotate = stepsToRotate % 2048;
     Serial.print("Rotating motor by ");
@@ -266,10 +272,13 @@
         delay(10);
       }
     }
-    todaysDay = random(0, 7);
-    storedDay = today;
-    // EEPROM.write(0,today );
-    // EEPROM.commit();
+    EEPROM.write(0,today );
+    EEPROM.commit();
+
+    pinMode(IN1_1, INPUT);
+    pinMode(IN2_1, INPUT);
+    pinMode(IN3_1, INPUT);
+    pinMode(IN4_1, INPUT);
   }
 
   void rotate2(float rotateDeg, TimeDifference diff) { 
@@ -288,10 +297,10 @@
         delay(10);
       }
     }
-    pinMode(IN5_1, OUTPUT);
-    pinMode(IN6_1, OUTPUT);
-    pinMode(IN7_1, OUTPUT);
-    pinMode(IN8_1, OUTPUT);
+    pinMode(IN5_1, INPUT);
+    pinMode(IN6_1, INPUT);
+    pinMode(IN7_1, INPUT);
+    pinMode(IN8_1, INPUT);
   }
 
 
@@ -354,7 +363,7 @@ int extraFixTime(int currMin){
 
 // ----------------------------------------------------------------------------------
 void checkEprom(){
-     EEPROM.begin(512);
+    EEPROM.begin(512);
     EEPROM.write(1, (3) & 0xFF);
     int n = -45;
     int minute = 60 + n ; 
@@ -368,7 +377,7 @@ void checkEprom(){
     Serial.println(min);
 }
 
-void rotateMotor(float angle, int delayMs) {
+void rotate2Motor(float angle, int delayMs) {
     pinMode(IN5_1, OUTPUT);
     pinMode(IN6_1, OUTPUT);
     pinMode(IN7_1, OUTPUT);
@@ -387,9 +396,34 @@ void rotateMotor(float angle, int delayMs) {
         }
     }
 
+    pinMode(IN5_1, INPUT);
+    pinMode(IN6_1, INPUT);
+    pinMode(IN7_1, INPUT);
+    pinMode(IN8_1, INPUT);
+}
+
+void rotate1Motor(float angle, int delayMs) {
+    pinMode(IN1_1, OUTPUT);
+    pinMode(IN2_1, OUTPUT);
+    pinMode(IN3_1, OUTPUT);
+    pinMode(IN4_1, OUTPUT);
+
+    int stepsToRotate = round((angle / 0.17578) / 4);
+    stepsToRotate = stepsToRotate % 2048;
+
+    for (int i = 0; i < abs(stepsToRotate); i++) {
+        for (int step = 0; step < 4; step++) {
+            digitalWrite(IN5_1, motorSteps[step][0]);
+            digitalWrite(IN6_1, motorSteps[step][1]);
+            digitalWrite(IN7_1, motorSteps[step][2]);
+            digitalWrite(IN8_1, motorSteps[step][3]);
+            delay(delayMs);
+        }
+    }
+
     // Reset motor pins to avoid overheating
-    digitalWrite(IN5_1, LOW);
-    digitalWrite(IN6_1, LOW);
-    digitalWrite(IN7_1, LOW);
-    digitalWrite(IN8_1, LOW);
+    pinMode(IN1_1, INPUT);
+    pinMode(IN2_1, INPUT);
+    pinMode(IN3_1, INPUT);
+    pinMode(IN4_1, INPUT);
 }
