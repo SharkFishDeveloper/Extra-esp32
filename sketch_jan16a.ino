@@ -71,29 +71,29 @@
     // pinMode(IN2_1, OUTPUT);
     // pinMode(IN3_1, OUTPUT);
     // pinMode(IN4_1, OUTPUT);
-    pinMode(IN5_1, OUTPUT);
-    pinMode(IN6_1, OUTPUT);
-    pinMode(IN7_1, OUTPUT);
-    pinMode(IN8_1, OUTPUT);
+    // pinMode(IN5_1, OUTPUT);
+    // pinMode(IN6_1, OUTPUT);
+    // pinMode(IN7_1, OUTPUT);
+    // pinMode(IN8_1, OUTPUT);
 
-    // EEPROM.begin(512);
-    // EEPROM.write(1, (4) & 0xFF); 
-    //         int n = 00;
-    // int minute = n < 0 ? 256 + n : n; 
-    // EEPROM.write(2, (minute / 256) & 0xFF);  // Store the high byte of minutes in EEPROM at address 2
-    // EEPROM.write(3, minute & 0xFF);
-    // EEPROM.commit();
-      
+      // EEPROM.begin(512);
+      // EEPROM.write(1,  (0) & 0xFF);
+      // int n = -15;
+      // int minute = 60 + n ; 
+      // EEPROM.write(2, (minute) & 0xFF);
+      // EEPROM.commit();
+      // rotateMotor(350,10);
+      // timeFn();
 //---------------------------------------------------------------------------------
-    int storedTime = EEPROM.read(1);
-    if(storedTime < -1 || storedTime > 4){
-      EEPROM.begin(512);
-      EEPROM.write(1,  (0) & 0xFF);
-      int n = 00;
-      int minute = 60 + n ; 
-      EEPROM.write(2, (minute) & 0xFF);
-      EEPROM.commit();
-    }
+    // int storedTime = EEPROM.read(1);
+    // if(storedTime < -1 || storedTime > 4){
+    //   EEPROM.begin(512);
+    //   EEPROM.write(1,  (0) & 0xFF);
+    //           int n = -30;
+    //   int minute = 60 + n ; 
+    //   EEPROM.write(2, (minute) & 0xFF);
+    //   EEPROM.commit();
+    // }
   }
 
   void loop() {  
@@ -118,7 +118,7 @@
     //   // }
     //   lastMillis = millis();
     // }
-    delay(120000);
+    delay(60000);
     timeFn();
   }
 
@@ -138,16 +138,16 @@
     int currHour = timeInfo.tm_hour;
     int currMin = timeInfo.tm_min;
 
-    // int currHour = 24;
-    // int currMin  = 45;
+    // int currHour = 19;
+    // int currMin  = 16;
     
     // int strHour = 1;
     // int strMin = 00;
-
-    // Serial.print(currHour);
-    // Serial.print(":");
-    // Serial.print(currMin);
-    // Serial.print("=>");
+    Serial.print("Curr hour->");
+    Serial.print(currHour);
+    Serial.print(":");
+    Serial.print(currMin);
+    Serial.print("=>");
     Serial.print("Stored time ==>");
     Serial.print(strHour);
     Serial.print(":");
@@ -273,6 +273,10 @@
   }
 
   void rotate2(float rotateDeg, TimeDifference diff) { 
+    pinMode(IN5_1, OUTPUT);
+    pinMode(IN6_1, OUTPUT);
+    pinMode(IN7_1, OUTPUT);
+    pinMode(IN8_1, OUTPUT);
     int stepsToRotate = round((rotateDeg / 0.17578) / 4);
     stepsToRotate = stepsToRotate % 2048;
     for (int i = 0; i < abs(stepsToRotate); i++) {
@@ -364,5 +368,28 @@ void checkEprom(){
     Serial.println(min);
 }
 
+void rotateMotor(float angle, int delayMs) {
+    pinMode(IN5_1, OUTPUT);
+    pinMode(IN6_1, OUTPUT);
+    pinMode(IN7_1, OUTPUT);
+    pinMode(IN8_1, OUTPUT);
 
+    int stepsToRotate = round((angle / 0.17578) / 4);
+    stepsToRotate = stepsToRotate % 2048;
 
+    for (int i = 0; i < abs(stepsToRotate); i++) {
+        for (int step = 0; step < 4; step++) {
+            digitalWrite(IN5_1, motorSteps[step][0]);
+            digitalWrite(IN6_1, motorSteps[step][1]);
+            digitalWrite(IN7_1, motorSteps[step][2]);
+            digitalWrite(IN8_1, motorSteps[step][3]);
+            delay(delayMs);
+        }
+    }
+
+    // Reset motor pins to avoid overheating
+    digitalWrite(IN5_1, LOW);
+    digitalWrite(IN6_1, LOW);
+    digitalWrite(IN7_1, LOW);
+    digitalWrite(IN8_1, LOW);
+}
