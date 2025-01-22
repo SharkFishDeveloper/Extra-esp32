@@ -1,7 +1,6 @@
   #include <WiFi.h>
   #include "time.h"
   #include <EEPROM.h>
-  // #include <ESP32Servo.h>
 
   struct TimeDifference {
     int hours;
@@ -24,11 +23,6 @@
     { LOW, HIGH, HIGH, LOW },
     { LOW, LOW, HIGH, HIGH }
   };
-  // static int storedDay = 1;
-  // static int todaysDay = 1;
-
-
-  // Servo myServo;
 
   void setup() {
     Serial.begin(9600);
@@ -52,63 +46,23 @@
       delay(1000);
     }
 //-----------------------------------------------------------------------------------
-      // EEPROM.begin(512);
-      // EEPROM.write(0, 3);  // Store the new day
-      // EEPROM.commit();  
-    //  rotate1Motor(350,10);
-  
-     int storedDay = EEPROM.read(0);
-     if (storedDay >= 0 && storedDay <= 6) {
-      Serial.print("Day already stored in EEPROM: ");
-      Serial.println(daysOfWeek[storedDay]);  // Print the stored day name
-     } else {
-      int today = timeInfo.tm_wday;  // Get the current day from NTP (0 = Sunday, 6 = Saturday)
+      // rotate1Motor(350,10);
       EEPROM.begin(512);
-      EEPROM.write(0, today);  // Store the new day
-      EEPROM.commit();         // Commit the changes
-      Serial.print("Stored new day in EEPROM: ");
-      Serial.println(daysOfWeek[today]);  // Print the current day name
-    }
-
-
-    // pinMode(IN1_1, OUTPUT);
-    // pinMode(IN2_1, OUTPUT);
-    // pinMode(IN3_1, OUTPUT);
-    // pinMode(IN4_1, OUTPUT);
-    // pinMode(IN5_1, OUTPUT);
-    // pinMode(IN6_1, OUTPUT);
-    // pinMode(IN7_1, OUTPUT);
-    // pinMode(IN8_1, OUTPUT);
-
-      // EEPROM.begin(512);
-      // EEPROM.write(1,  (0) & 0xFF);
-      // int n = -15;
-      // int minute = 60 + n ; 
-      // EEPROM.write(2, (minute) & 0xFF);
-      // EEPROM.commit();
-      // rotateMotor(350,10);
-      // timeFn();
+      storeWeekdayInEeprom(4);
 //---------------------------------------------------------------------------------
-    int storedTime = EEPROM.read(1);
-    if(storedTime < -1 || storedTime > 4){
-      EEPROM.begin(512);
-      EEPROM.write(1,  (0) & 0xFF);
-              int n = -45;
-      int minute = 60 + n ; 
-      EEPROM.write(2, (minute) & 0xFF);
-      EEPROM.commit();
-    }
-    Serial.println("END");
+      // timeFn();
+      // rotate2Motor(350,10);
+      storeAndCheckInitialTimeEprom(-1,-1);
+      Serial.println("END");
+
   }
 
   void loop() {  
     static unsigned long lastMillis = millis();
     static struct tm timeInfo;
-    if (millis() - lastMillis >= 900000) {
+    if (millis() - lastMillis >= 300000) {
       if (getLocalTime(&timeInfo)) {
-        int storedDay = EEPROM.read(0); // Read the stored day(actual) ->3
-        // int todaysDay = 1;//->6
-        // static int todaysDay = 4;
+        int storedDay = EEPROM.read(0); 
         int todaysDay = timeInfo.tm_wday;
         int day_diff = (todaysDay - storedDay + 7) % 7;
         float rotateDeg = ((360.0 / 7.0) * day_diff);
@@ -116,15 +70,12 @@
         Serial.println(daysOfWeek[storedDay]);
         Serial.print("Today->");
         Serial.println(daysOfWeek[todaysDay]);
-        // Serial.print("rotate by ->");
-        // Serial.println(rotateDeg);
         rotate(rotateDeg,todaysDay);
       }
       lastMillis = millis();
     }
-    delay(300000);
+    delay(30000);
     timeFn();
-
     // -----------------
     // delay(5000);
   }
@@ -145,7 +96,7 @@
     int currHour = timeInfo.tm_hour;
     int currMin = timeInfo.tm_min;
 
-    // int currHour = 20;
+    // int currHour = 19;
     // int currMin  = 55;
     
     // int strHour = 1;
@@ -310,8 +261,8 @@
 
 
 
-  TimeDifference calculateTimeDifference(int currHour, int currMin, int strHour, int strMin,int baseHour) {
-    TimeDifference diff;
+TimeDifference calculateTimeDifference(int currHour, int currMin, int strHour, int strMin,int baseHour) {
+  TimeDifference diff;
   strHour = (baseHour) % 24;
   diff.hours = currHour - strHour; //8
   diff.minutes = currMin - 0;//0
@@ -400,7 +351,6 @@ void rotate2Motor(float angle, int delayMs) {
             delay(delayMs);
         }
     }
-
     pinMode(IN5_1, INPUT);
     pinMode(IN6_1, INPUT);
     pinMode(IN7_1, INPUT);
@@ -426,11 +376,47 @@ void rotate1Motor(float angle, int delayMs) {
             delay(delayMs);
         }
     }
-
-    // Reset motor pins to avoid overheating
     pinMode(IN1_1, INPUT);
     pinMode(IN2_1, INPUT);
     pinMode(IN3_1, INPUT);
     pinMode(IN4_1, INPUT);
 }
 
+void storeAndCheckInitialTimeEprom(int h,int m){
+    EEPROM.begin(512);
+    int storedHour = EEPROM.read(1);
+    int storedMin  = EEPROM.read(2);
+    storedMin -= 60;
+    if(h == -1 && m == -1){
+       if(storedHour < -1 || storedHour > 4){
+        EEPROM.write(1,  (0) & 0xFF);
+        int n = 0;
+        int minute = 60 + n ; 
+        EEPROM.write(2, (minute) & 0xFF);
+        EEPROM.commit();
+        return;
+      }
+    }
+    else {
+      if (storedHour != h || storedMin != m) {
+      EEPROM.write(1,  (h) & 0xFF);
+      int minute = m + 60; 
+      EEPROM.write(2, (minute) & 0xFF);
+      EEPROM.commit();
+      return ;
+    }
+  }
+}
+void storeWeekdayInEeprom(int weekday) {
+    if (weekday == -1) {
+        int storedDay = EEPROM.read(0);
+        if(storedDay < 0 || storedDay > 6){
+          EEPROM.write(0, 1);
+          EEPROM.commit();
+        }
+        Serial.println("No update to EEPROM.");
+    } else {
+        EEPROM.write(0, weekday);
+        EEPROM.commit();
+    }
+}
