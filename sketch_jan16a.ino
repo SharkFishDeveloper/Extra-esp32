@@ -47,21 +47,22 @@
     }
 //-----------------------------------------------------------------------------------
       // rotate1Motor(350,10);
-      EEPROM.begin(512);
-      storeWeekdayInEeprom(4);
+      // EEPROM.begin(512);
+      storeWeekdayInEeprom(-1);
 //---------------------------------------------------------------------------------
       // timeFn();
       // rotate2Motor(350,10);
       storeAndCheckInitialTimeEprom(-1,-1);
-      Serial.println("END");
+      // Serial.println("END");
 
   }
 
   void loop() {  
     static unsigned long lastMillis = millis();
     static struct tm timeInfo;
-    if (millis() - lastMillis >= 300000) {
+    if (millis() - lastMillis >= 6000000) {
       if (getLocalTime(&timeInfo)) {
+        EEPROM.begin(512);
         int storedDay = EEPROM.read(0); 
         int todaysDay = timeInfo.tm_wday;
         int day_diff = (todaysDay - storedDay + 7) % 7;
@@ -74,7 +75,7 @@
       }
       lastMillis = millis();
     }
-    delay(30000);
+    delay(600000);
     timeFn();
     // -----------------
     // delay(5000);
@@ -96,9 +97,10 @@
     int currHour = timeInfo.tm_hour;
     int currMin = timeInfo.tm_min;
 
-    // int currHour = 19;
+    // int currHour = 00;
     // int currMin  = 55;
     
+    if(currHour == 0)currHour = 24;
     // int strHour = 1;
     // int strMin = 00;
     Serial.print("Curr hour->");
@@ -228,6 +230,7 @@
         delay(10);
       }
     }
+    EEPROM.begin(512);
     EEPROM.write(0,today );
     EEPROM.commit();
 
@@ -408,15 +411,16 @@ void storeAndCheckInitialTimeEprom(int h,int m){
   }
 }
 void storeWeekdayInEeprom(int weekday) {
-    if (weekday == -1) {
-        int storedDay = EEPROM.read(0);
-        if(storedDay < 0 || storedDay > 6){
-          EEPROM.write(0, 1);
-          EEPROM.commit();
-        }
-        Serial.println("No update to EEPROM.");
-    } else {
-        EEPROM.write(0, weekday);
-        EEPROM.commit();
+  EEPROM.begin(512);
+  if (weekday == -1) {
+    int storedDay = EEPROM.read(0);
+    if (storedDay < 0 || storedDay > 6) {
+      EEPROM.write(0, 1);
+      EEPROM.commit();
     }
+    Serial.println("No update to EEPROM.");
+  } else {
+    EEPROM.write(0, weekday);
+    EEPROM.commit();
+  }
 }
